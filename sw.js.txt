@@ -1,0 +1,60 @@
+const CACHE_NAME = 'tide-cache-v1';
+const urlsToCache = [
+  'index.html',
+  'manifest.json',
+  // 这里列出所有图片、音频文件（必须全部写明）
+  'main.png',
+  'morning.png',
+  'lunch.png',
+  'mood.png',
+  'night_late.png',
+  'rain.png',
+  'weekend_food.png',
+  'exercise.png',
+  'period.png',
+  'stress.png',
+  'overexercise.png',
+  'abortion_memory.png',
+  'medicine.png',
+  'damp_heat.png',
+  'report_bg.png',
+  'organ.png',
+  'heart_orange.png',
+  'heart_red.png',
+  'liver_orange.png',
+  'liver_red.png',
+  'spleen_orange.png',
+  'spleen_red.png',
+  'kidney_orange.png',
+  'kidney_red.png',
+  'lung_orange.png',
+  'lung_red.png',
+  'qi.png',
+  'xue.png',
+  'yin.png',
+  'yang.png',
+  'jar_qizhi.png',
+  'jar_xueyu.png',
+  'jar_tanshi.png',
+  'jar_hanxie.png',
+  'jar_rexie.png',
+  'bgm_main.mp3',
+  'sfx_click.mp3',
+  'sfx_change.mp3',
+  'sfx_organ.mp3',
+  'sfx_report.mp3'
+];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => response || fetch(event.request))
+  );
+});

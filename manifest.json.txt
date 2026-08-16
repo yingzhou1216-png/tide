@@ -1,0 +1,21 @@
+{
+  "name": "潮汐之约 · 新病机",
+  "short_name": "潮汐之约",
+  "description": "中医妇科病机教学模拟",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>潮汐之约 · 新病机</title>
+
+    <style>
+        /* ===== 全局重置 & 变量 ===== */
+        :root {
+            --gold: #d8aa35;
+            --gold2: #fff0a8;
+            --dark: #050505;
+            --panel: rgba(0, 0, 0, .68);
+            --red: #b51f1f;
+            --orange: #e88725;
+            --white: #f8f1df;
+            --muted: #d1c6ae;
+            --green: #77bd86;
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            background: #000;
+            color: var(--white);
+            overflow: hidden;
+            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #app {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 414px;
+            max-height: 896px;
+            overflow: hidden;
+            background: #050505;
+            box-shadow: 0 0 40px rgba(0, 0, 0, .9);
+        }
+        @media (min-width:500px) {
+            #app {
+                height: 896px;
+            }
+        }
+
+        /* ===== 屏幕切换 ===== */
+        .screen {
+            position: absolute;
+            inset: 0;
+            display: none;
+            overflow: hidden;
+            background: #050505;
+        }
+        .screen.active {
+            display: block;
+        }
+
+        /* ===== 背景 ===== */
+        .bg,
+        .reportBg {
+            position: absolute;
+            inset: 0;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            filter: brightness(.72);
+        }
+        .bg::after,
+        .reportBg::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(to bottom, rgba(0, 0, 0, .35), rgba(0, 0, 0, .15) 38%, rgba(0, 0, 0, .85)),
+                radial-gradient(circle at center, transparent 25%, rgba(0, 0, 0, .4) 100%);
+        }
+        .placeholder-bg {
+            background:
+                radial-gradient(circle at 50% 25%, rgba(155, 113, 30, .22), transparent 35%),
+                linear-gradient(135deg, #18120a, #020202 75%);
+        }
+
+        /* ===== 通用居中 ===== */
+        .center {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+            text-align: center;
+        }
+        .title {
+            color: var(--gold2);
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: 8px;
+            text-shadow: 0 0 16px rgba(216, 170, 53, .55);
+        }
+        .subtitle {
+            margin-top: 15px;
+            color: #eadfbe;
+            font-size: 15px;
+            letter-spacing: 2px;
+        }
+        .btn {
+            min-width: 176px;
+            padding: 13px 20px;
+            border: 1px solid rgba(255, 225, 136, .8);
+            border-radius: 4px;
+            color: var(--gold2);
+            background: linear-gradient(180deg, rgba(132, 96, 24, .65), rgba(46, 30, 6, .9));
+            font-size: 16px;
+            letter-spacing: 1px;
+            box-shadow: 0 0 14px rgba(216, 170, 53, .16);
+            cursor: pointer;
+        }
+        .btn:active {
+            transform: scale(.98);
+        }
+        .btn.small {
+            min-width: auto;
+            padding: 10px 13px;
+            font-size: 13px;
+        }
+
+        /* ===== 音乐按钮 ===== */
+        .music {
+            position: absolute;
+            z-index: 30;
+            top: max(16px, env(safe-area-inset-top));
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(255, 239, 168, .65);
+            border-radius: 50%;
+            color: var(--gold2);
+            background: rgba(0, 0, 0, .45);
+            font-size: 19px;
+            cursor: pointer;
+        }
+        .music.off {
+            opacity: .45;
+            text-decoration: line-through;
+        }
+
+        /* ===== 免责声明 ===== */
+        .disclaimer {
+            max-width: 330px;
+            padding: 22px;
+            border: 1px solid rgba(216, 170, 53, .55);
+            background: rgba(19, 14, 6, .92);
+            color: #e8dcc4;
+            font-size: 15px;
+            line-height: 1.9;
+            text-align: left;
+        }
+
+        /* ===== 顶部气血阴阳 ===== */
+        .topStats {
+            position: absolute;
+            z-index: 5;
+            top: max(54px, calc(env(safe-area-inset-top) + 44px));
+            left: 13px;
+            right: 13px;
+            padding: 9px 10px;
+            border: 1px solid rgba(216, 170, 53, .42);
+            border-radius: 7px;
+            background: rgba(0, 0, 0, .58);
+            backdrop-filter: blur(3px);
+        }
+        .statRow {
+            position: relative;
+            display: grid;
+            grid-template-columns: 28px 26px 1fr 29px;
+            align-items: center;
+            gap: 6px;
+            min-height: 30px;
+            border-radius: 4px;
+            transition: background .2s, box-shadow .2s;
+        }
+        .statRow.changing {
+            background: rgba(216, 170, 53, .2);
+            box-shadow: inset 0 0 0 1px rgba(255, 240, 168, .32), 0 0 12px rgba(216, 170, 53, .24);
+        }
+        .iconBox {
+            width: 23px;
+            height: 23px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .iconBox img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .statName {
+            color: #f1dfba;
+            font-size: 16px;
+            text-align: center;
+        }
+        .barWrap {
+            height: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 241, 184, .35);
+            border-radius: 20px;
+            background: #241d12;
+        }
+        .barFill {
+            height: 100%;
+            border-radius: 20px;
+            background: linear-gradient(90deg, #79551d, var(--gold), var(--gold2));
+            transition: width .35s ease;
+        }
+        .statVal {
+            color: var(--gold2);
+            font-size: 16px;
+            text-align: right;
+        }
+        .floatChange {
+            position: absolute;
+            z-index: 8;
+            right: -2px;
+            top: 50%;
+            opacity: 0;
+            pointer-events: none;
+            font-size: 20px;
+            font-weight: 700;
+            text-shadow: 0 1px 3px #000;
+            transform: translateY(-50%);
+        }
+        .floatChange.up {
+            color: #8ce09b;
+        }
+        .floatChange.down {
+            color: #ff8b79;
+        }
+        .floatChange.show {
+            animation: floatNum 1.5s ease forwards;
+        }
+        @keyframes floatNum {
+            0% {
+                opacity: 0;
+                transform: translate(-8px, -25%);
+            }
+            18% {
+                opacity: 1;
+            }
+            75% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-8px, -130%);
+            }
+        }
+
+        /* ===== 中部剧情 ===== */
+        .storyBox {
+            position: absolute;
+            z-index: 4;
+            top: 222px;
+            left: 16px;
+            right: 16px;
+            bottom: 215px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 16px 15px;
+            border: 1px solid rgba(216, 170, 53, .35);
+            border-radius: 8px;
+            background: linear-gradient(180deg, rgba(0, 0, 0, .30), rgba(0, 0, 0, .20));
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .3);
+        }
+        .probText {
+            position: absolute;
+            top: 9px;
+            left: 10px;
+            right: 10px;
+            max-height: 48px;
+            overflow-y: auto;
+            color: #f4cc75;
+            font-size: 13px;
+            line-height: 1.45;
+            text-align: left;
+        }
+        .probText div {
+            margin-bottom: 2px;
+        }
+        .dayLabel {
+            margin-top: 24px;
+            color: var(--gold);
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+        .sceneTitle {
+            margin-top: 8px;
+            color: var(--gold2);
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        .storyText {
+            min-height: 42px;
+            margin: 9px 7px 13px;
+            color: #e8ddc7;
+            font-size: 15px;
+            line-height: 1.65;
+            text-align: center;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+        .optionBtn {
+            position: relative;
+            width: 100%;
+            padding: 12px 14px 11px;
+            border: 1px solid rgba(255, 227, 150, .5);
+            border-radius: 5px;
+            color: var(--white);
+            background: linear-gradient(90deg, rgba(81, 57, 19, .84), rgba(20, 15, 7, .88));
+            text-align: left;
+            cursor: pointer;
+        }
+        .optionBtn:hover {
+            border-color: var(--gold2);
+        }
+        .optionBtn.disabled {
+            pointer-events: none;
+            opacity: .5;
+        }
+        .optionTag {
+            display: inline-block;
+            width: 22px;
+            color: var(--gold2);
+            font-weight: 700;
+        }
+        .optionTitle {
+            color: #fff0ba;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .optionDesc {
+            display: block;
+            margin-top: 4px;
+            padding-left: 22px;
+            color: #d7c9ae;
+            font-size: 12px;
+        }
+        .continueWrap {
+            display: none;
+            margin-top: 13px;
+            text-align: center;
+        }
+
+        /* ===== 底部面板：罐子 + 五脏 ===== */
+        .bottomPanel {
+            position: absolute;
+            z-index: 5;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 207px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding: 10px 13px max(12px, env(safe-area-inset-bottom));
+            background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, .78) 18%, rgba(0, 0, 0, .94));
+        }
+
+        /* 罐子区域 — 第一排3个，第二排2个 */
+        .jars {
+            width: 53%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 4px;
+        }
+        .jarItem {
+            position: relative;
+            display: grid;
+            grid-template-columns: 34px 1fr;
+            align-items: center;
+            min-height: 60px;
+            padding: 3px 4px;
+            border-radius: 6px;
+            transition: background .2s, box-shadow .2s;
+            flex: 0 0 calc(33.33% - 4px);
+        }
+        .jarItem:nth-child(4),
+        .jarItem:nth-child(5) {
+            flex: 0 0 calc(50% - 4px);
+        }
+        .jarItem.changing {
+            background: rgba(216, 170, 53, .18);
+            box-shadow: inset 0 0 0 1px rgba(255, 240, 168, .3), 0 0 10px rgba(216, 170, 53, .18);
+        }
+        .jarImage {
+            width: 32px;
+            height: 46px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 5px rgba(216, 170, 53, .2));
+        }
+        .jarInfo {
+            min-width: 0;
+            padding-left: 2px;
+        }
+        .jarName {
+            color: #eddcae;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .jarBar {
+            height: 5px;
+            overflow: hidden;
+            margin-top: 3px;
+            border: 1px solid rgba(255, 236, 171, .28);
+            border-radius: 8px;
+            background: #20190f;
+        }
+        .jarFill {
+            height: 100%;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #7a3617, #e88725, #ffe092);
+            transition: width .35s ease;
+        }
+        .jarVal {
+            margin-top: 2px;
+            color: #f9ecce;
+            font-size: 13px;
+        }
+        .jarFloat {
+            position: absolute;
+            z-index: 9;
+            top: 2px;
+            right: 2px;
+            opacity: 0;
+            font-size: 18px;
+            font-weight: 700;
+            pointer-events: none;
+            text-shadow: 0 1px 3px #000;
+        }
+        .jarFloat.up {
+            color: #ffbd63;
+        }
+        .jarFloat.down {
+            color: #8ce09b;
+        }
+        .jarFloat.show {
+            animation: jarFloatAnim 1.5s ease forwards;
+        }
+        @keyframes jarFloatAnim {
+            0% {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            18% {
+                opacity: 1;
+            }
+            76% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-24px);
+            }
+        }
+
+        /* 五脏罗盘 */
+        .organPanel {
+            position: relative;
+            width: 43%;
+            max-width: 165px;
+            aspect-ratio: 1/1;
+            margin-bottom: 1px;
+        }
+        .organCompassImg,
+        .organStateImg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            user-select: none;
+        }
+        .organCompassImg {
+            z-index: 1;
+        }
+        .organStateImg {
+            z-index: 2;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity .2s ease;
+        }
+        .organStateImg.is-visible {
+            visibility: visible;
+            opacity: 1;
+        }
+        .organHit {
+            position: absolute;
+            z-index: 4;
+            width: 34px;
+            height: 34px;
+            margin: -17px 0 0 -17px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .organ-heart {
+            left: 50%;
+            top: 17%;
+        }
+        .organ-liver {
+            left: 22%;
+            top: 45%;
+        }
+        .organ-spleen {
+            left: 78%;
+            top: 45%;
+        }
+        .organ-kidney {
+            left: 32%;
+            top: 78%;
+        }
+        .organ-lung {
+            left: 68%;
+            top: 78%;
+        }
+        .organHit.flash.orange {
+            animation: orangePulse 1s ease-out forwards;
+        }
+        .organHit.flash.red {
+            animation: redPulse 1s ease-out forwards;
+        }
+        @keyframes orangePulse {
+            0% {
+                opacity: .15;
+                transform: scale(.65);
+                box-shadow: 0 0 0 0 rgba(232, 135, 37, .85);
+            }
+            45% {
+                opacity: 1;
+                transform: scale(1.25);
+                box-shadow: 0 0 0 6px rgba(232, 135, 37, .22), 0 0 20px 7px rgba(232, 135, 37, .65);
+            }
+            100% {
+                opacity: .95;
+                transform: scale(1);
+                box-shadow: 0 0 0 2px rgba(232, 135, 37, .5), 0 0 8px 2px rgba(232, 135, 37, .4);
+            }
+        }
+        @keyframes redPulse {
+            0% {
+                opacity: .15;
+                transform: scale(.65);
+                box-shadow: 0 0 0 0 rgba(229, 42, 42, .9);
+            }
+            45% {
+                opacity: 1;
+                transform: scale(1.3);
+                box-shadow: 0 0 0 7px rgba(229, 42, 42, .23), 0 0 22px 8px rgba(229, 42, 42, .72);
+            }
+            100% {
+                opacity: .95;
+                transform: scale(1);
+                box-shadow: 0 0 0 2px rgba(229, 42, 42, .55), 0 0 9px 2px rgba(229, 42, 42, .45);
+            }
+        }
+
+        /* ===== 报告页 ===== */
+        .reportCardWrap {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            overflow-y: auto;
+            padding: 74px 18px 28px;
+            scrollbar-width: none;
+        }
+        .reportCardWrap::-webkit-scrollbar {
+            display: none;
+        }
+        .reportTitle {
+            margin-bottom: 15px;
+            color: var(--gold2);
+            font-size: 29px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(216, 170, 53, .4);
+        }
+        .reportCard {
+            padding: 14px 16px;
+            border: 1px solid rgba(216, 170, 53, .65);
+            border-radius: 7px;
+            background: rgba(10, 7, 3, .79);
+            box-shadow: 0 0 25px rgba(0, 0, 0, .45);
+        }
+        .reportConclusion {
+            margin-bottom: 12px;
+            padding-bottom: 11px;
+            border-bottom: 1px solid rgba(216, 170, 53, .35);
+            color: #ffe7a0;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.65;
+        }
+        .reportRow {
+            display: grid;
+            grid-template-columns: 66px 1fr;
+            padding: 9px 0;
+            border-bottom: 1px dashed rgba(255, 239, 184, .17);
+        }
+        .reportKey {
+            color: var(--gold);
+            font-size: 13px;
+        }
+        .reportVal {
+            color: #eee0c7;
+            font-size: 13px;
+            line-height: 1.65;
+        }
+        .reportNote {
+            margin-top: 13px;
+            color: #bcaf97;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+        .reportBtns {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 16px 0 20px;
+        }
+
+        /* ===== 回顾页 ===== */
+        .reviewScreen {
+            overflow-y: auto;
+            padding: 68px 17px 25px;
+            background:
+                radial-gradient(circle at 50% 0, rgba(139, 97, 24, .2), transparent 34%),
+                #050505;
+        }
+        .backBtn {
+            position: absolute;
+            top: 17px;
+            left: 16px;
+        }
+        .reviewPanel {
+            padding-bottom: 20px;
+        }
+        .reviewTitle {
+            margin-bottom: 15px;
+            color: var(--gold2);
+            font-size: 25px;
+            font-weight: 700;
+            text-align: center;
+        }
+        .finalState,
+        .reviewItem {
+            margin-bottom: 10px;
+            padding: 12px;
+            border: 1px solid rgba(216, 170, 53, .35);
+            border-radius: 5px;
+            background: rgba(37, 27, 10, .58);
+            color: #e5d8bf;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-height:720px) {
+            .topStats {
+                top: 48px;
+            }
+            .storyBox {
+                top: 202px;
+                bottom: 193px;
+                padding: 11px;
+            }
+            .sceneTitle {
+                font-size: 20px;
+            }
+            .optionBtn {
+                padding: 9px 11px;
+            }
+            .bottomPanel {
+                height: 185px;
+            }
+            .jarItem {
+                min-height: 52px;
+            }
+            .jarImage {
+                height: 40px;
+                width: 28px;
+            }
+            .jarName {
+                font-size: 13px;
+            }
+            .jarVal {
+                font-size: 12px;
+            }
+        }
+
+        /* ===== 退出按钮 & 弹窗 ===== */
+        .exit-btn {
+            position: absolute;
+            z-index: 6;
+            top: max(16px, env(safe-area-inset-top));
+            left: 16px;
+            padding: 6px 14px;
+            border: 1px solid rgba(255, 239, 168, .65);
+            border-radius: 4px;
+            color: var(--gold2);
+            background: rgba(0, 0, 0, .45);
+            font-size: 14px;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        .exit-btn:active {
+            background: rgba(0, 0, 0, .7);
+            transform: scale(.96);
+        }
+        .modal-overlay {
+            position: absolute;
+            z-index: 100;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, .72);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            max-width: 300px;
+            width: 86%;
+            padding: 28px 24px 24px;
+            border: 1px solid rgba(216, 170, 53, .6);
+            border-radius: 8px;
+            background: rgba(19, 14, 6, .96);
+            text-align: center;
+            box-shadow: 0 0 50px rgba(0, 0, 0, .8);
+            animation: modalIn .25s ease;
+        }
+        @keyframes modalIn {
+            0% {
+                opacity: 0;
+                transform: scale(.92) translateY(12px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .modal-title {
+            color: var(--gold2);
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+        .modal-text {
+            margin: 14px 0 22px;
+            color: #e8dcc4;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        .modal-btns {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .modal-btns .btn {
+            min-width: 80px;
+            padding: 10px 16px;
+            font-size: 14px;
+        }
+        .modal-btns .btn.cancel-btn {
+            border-color: rgba(255, 255, 255, .3);
+            background: rgba(255, 255, 255, .08);
+        }
+        .modal-btns .btn.confirm-btn {
+            border-color: rgba(229, 42, 42, .6);
+            background: linear-gradient(180deg, rgba(132, 24, 24, .65), rgba(46, 6, 6, .9));
+            color: #ff8a7a;
+        }
+        .modal-btns .btn.confirm-btn:active {
+            transform: scale(.96);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+
+        <!-- 音频 -->
+        <audio id="bgm" src="bgm_main.mp3" loop></audio>
+        <audio id="sfxClick" src="sfx_click.mp3"></audio>
+        <audio id="sfxChange" src="sfx_change.mp3"></audio>
+        <audio id="sfxOrgan" src="sfx_organ.mp3"></audio>
+        <audio id="sfxReport" src="sfx_report.mp3"></audio>
+
+        <button class="music" id="musicBtn" aria-label="音乐开关">♪</button>
+
+        <!-- ===== 首页 ===== -->
+        <section id="home" class="screen active">
+            <div class="bg" style="background-image:url('main.png')"></div>
+            <div class="center">
+                <div class="title">潮汐之约</div>
+                <div class="subtitle">中医妇科病机教学模拟</div>
+                <div style="height:38px"></div>
+                <button class="btn" id="startGame">开始游戏</button>
+            </div>
+        </section>
+
+        <!-- ===== 免责声明 ===== -->
+        <section id="disclaimer" class="screen">
+            <div class="center" style="background:#000;">
+                <div class="disclaimer">
+                    本游戏为中医妇科病机教学模拟工具，结果仅用于学习和情境体验，不能替代医生诊断、处方或治疗建议。<br><br>
+                    如有月经异常、剧烈痛经或持续不适，请及时就医。
+                </div>
+                <div style="height:30px"></div>
+                <button class="btn" id="enterGameBtn">进入游戏</button>
+            </div>
+        </section>
+
+        <!-- ===== 游戏页 ===== -->
+        <section id="gameScreen" class="screen">
+            <div class="bg placeholder-bg" id="gameBg"></div>
+            <button class="exit-btn" id="exitBtn">退出</button>
+            <div class="topStats" id="topStats"></div>
+
+            <div class="storyBox">
+                <div class="probText" id="probText"></div>
+                <div class="dayLabel" id="dayLabel">DAY 1</div>
+                <div class="sceneTitle" id="sceneTitle"></div>
+                <div class="storyText" id="storyText"></div>
+                <div class="options" id="options"></div>
+                <div class="continueWrap" id="continueWrap">
+                    <button class="btn" id="continueBtn">继续</button>
+                </div>
+            </div>
+
+            <div class="bottomPanel">
+                <div class="jars" id="jars"></div>
+
+                <div class="organPanel" id="organPanel">
+                    <img class="organCompassImg" src="organ.png" alt="五脏罗盘">
+
+                    <img class="organStateImg" id="heartOrangeImg" src="heart_orange.png" alt="">
+                    <img class="organStateImg" id="heartRedImg" src="heart_red.png" alt="">
+                    <img class="organStateImg" id="liverOrangeImg" src="liver_orange.png" alt="">
+                    <img class="organStateImg" id="liverRedImg" src="liver_red.png" alt="">
+                    <img class="organStateImg" id="spleenOrangeImg" src="spleen_orange.png" alt="">
+                    <img class="organStateImg" id="spleenRedImg" src="spleen_red.png" alt="">
+                    <img class="organStateImg" id="kidneyOrangeImg" src="kidney_orange.png" alt="">
+                    <img class="organStateImg" id="kidneyRedImg" src="kidney_red.png" alt="">
+                    <img class="organStateImg" id="lungOrangeImg" src="lung_orange.png" alt="">
+                    <img class="organStateImg" id="lungRedImg" src="lung_red.png" alt="">
+
+                    <div class="organHit organ-heart" data-organ="heart"></div>
+                    <div class="organHit organ-liver" data-organ="liver"></div>
+                    <div class="organHit organ-spleen" data-organ="spleen"></div>
+                    <div class="organHit organ-kidney" data-organ="kidney"></div>
+                    <div class="organHit organ-lung" data-organ="lung"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 报告页 ===== -->
+        <section id="reportScreen" class="screen">
+            <div class="reportBg" style="background-image:url('report_bg.png')"></div>
+            <div class="reportCardWrap">
+                <div class="reportTitle">月经表现卡</div>
+                <div class="reportCard" id="reportCard"></div>
+                <div class="reportBtns">
+                    <button class="btn small" id="reviewBtn">查看本局选择回顾</button>
+                    <button class="btn small" id="restartBtn1">重新开始</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 回顾页 ===== -->
+        <section id="reviewScreen" class="screen reviewScreen">
+            <button class="btn small backBtn" id="backReportBtn">返回</button>
+            <div class="reviewPanel" id="reviewPanel"></div>
+        </section>
+
+        <!-- ===== 退出确认弹窗 ===== -->
+        <div id="exitModal" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-title">确认退出</div>
+                <div class="modal-text">确定要退出游戏吗？<br>当前进度将不会保存。</div>
+                <div class="modal-btns">
+                    <button class="btn small cancel-btn" id="modalCancel">取消</button>
+                    <button class="btn small confirm-btn" id="modalConfirm">确定退出</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ================================================================
+        //  工具 & 常量
+        // ================================================================
+        const $ = id => document.getElementById(id);
+
+        const BASE_KEYS = [
+            { k: "qi", name: "气", icon: "qi.png" },
+            { k: "xue", name: "血", icon: "xue.png" },
+            { k: "yin", name: "阴", icon: "yin.png" },
+            { k: "yang", name: "阳", icon: "yang.png" }
+        ];
+
+        // 五个病理罐子：顺序决定布局（前3个第一排，后2个第二排）
+        const PATH_KEYS = [
+            { k: "qizhi", name: "气滞", img: "jar_qizhi.png" },
+            { k: "xueyu", name: "血瘀", img: "jar_xueyu.png" },
+            { k: "tanshi", name: "痰湿", img: "jar_tanshi.png" },
+            { k: "hanxie", name: "寒邪", img: "jar_hanxie.png" },
+            { k: "rejie", name: "热邪", img: "jar_rexie.png" }
+        ];
+
+        const ORGAN_NAMES = { heart: "心", liver: "肝", spleen: "脾", kidney: "肾", lung: "肺" };
+
+        let musicOn = true;
+        let state = null;
+
+// ========== 新增：数据保存与加载 ==========
+function loadGame() {
+    const saved = localStorage.getItem('tideState');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            Object.assign(state, parsed);
+            // 补上可能丢失的运行时属性
+            if (!state.consecutive) state.consecutive = { qizhi: 0, tanshi: 0 };
+            if (!state.probLines) state.probLines = [];
+            return true;
+        } catch(e) { console.error('读档失败', e); }
+    }
+    return false;
+}
+
+function saveGame() {
+    localStorage.setItem('tideState', JSON.stringify(state));
+}
+// ========== 新增结束 ==========
+
+        function clamp(v, min = 0, max = 100) { return Math.max(min, Math.min(max, v)); }
+
+        function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+        function shuffle(arr) {
+            const c = [...arr];
+            for (let i = c.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [c[i], c[j]] = [c[j], c[i]];
+            }
+            return c;
+        }
+
+        function show(screenId) {
+            document.querySelectorAll(".screen").forEach(el => {
+                el.classList.toggle("active", el.id === screenId);
+            });
+        }
+
+        function playSfx(id) {
+            if (!musicOn) return;
+            const audio = $(id);
+            if (!audio) return;
+            try { audio.currentTime = 0;
+                audio.play().catch(() => {}); } catch (e) {}
+        }
+
+        function startBgm() {
+            if (!musicOn) return;
+            const bgm = $("bgm");
+            bgm.volume = .38;
+            bgm.play().catch(() => {});
+        }
+
+        function toggleMusic() {
+            musicOn = !musicOn;
+            $("musicBtn").classList.toggle("off", !musicOn);
+            if (musicOn) startBgm();
+            else $("bgm").pause();
+        }
+
+        // ================================================================
+        //  场景数据（按文档 S01–S13）
+        // ================================================================
+        const SCENES = [{
+            id: "S01",
+            name: "晨起",
+            bg: "morning.png",
+            intro: "清晨醒来，你需要决定如何开始今天。",
+            A: {
+                t: "冰美式开机",
+                d: "一杯冰美式强行开机",
+                base: { yang: -5 },
+                path: { hanxie: 8, tanshi: 3 }
+            },
+            B: {
+                t: "小米粥早餐",
+                d: "一碗小米粥配馒头",
+                base: { qi: 2, yang: 1 },
+                path: {}
+            }
+        }, {
+            id: "S02",
+            name: "午休",
+            bg: "lunch.png",
+            intro: "午餐时间到了，身体也在接收你的饮食信号。",
+            A: {
+                t: "麻辣香锅",
+                d: "边吃边刷手机",
+                base: { yin: -10 },
+                path: { rejie: 12, qizhi: 5 }
+            },
+            B: {
+                t: "清淡饭菜",
+                d: "饭后散步10分钟",
+                base: { qi: 1 },
+                path: { tanshi: -3, rejie: -2 }
+            }
+        }, {
+            id: "S03",
+            name: "工作批评情绪",
+            bg: "mood.png",
+            intro: "工作中受到批评，你会如何安放这份情绪？",
+            A: {
+                t: "憋在心里",
+                d: "生闷气，不说出来",
+                base: { qi: -3 },
+                path: { qizhi: 15 }
+            },
+            B: {
+                t: "倾诉书写",
+                d: "向好友倾诉或写日记",
+                base: {},
+                path: { qizhi: -8 }
+            }
+        }, {
+            id: "S04",
+            name: "熬夜",
+            bg: "night_late.png",
+            intro: "夜已很深，身体在提醒你休息。",
+            A: {
+                t: "熬夜硬扛",
+                d: "凌晨3点，烧烤外卖",
+                base: { yin: -15, xue: -8, yang: -5 },
+                path: { rejie: 8, xueyu: 5 }
+            },
+            B: {
+                t: "早睡泡脚",
+                d: "11点前睡，睡前泡脚",
+                base: { yin: 5, xue: 4, yang: 3 },
+                path: { xueyu: -4, hanxie: -3 }
+            }
+        }, {
+            id: "S05",
+            name: "受凉",
+            bg: "rain.png",
+            intro: "天气湿冷，回到家后你打算怎样放松？",
+            A: {
+                t: "冷水冰饮",
+                d: "回家冷水澡，喝冰饮",
+                base: { yang: -12 },
+                path: { hanxie: 18 }
+            },
+            B: {
+                t: "热水姜茶",
+                d: "热水澡，姜枣茶驱寒",
+                base: { yang: 6 },
+                path: { hanxie: -10 }
+            }
+        }, {
+            id: "S06",
+            name: "周末饮食",
+            bg: "weekend_food.png",
+            intro: "难得的周末聚餐，你会怎样选择？",
+            A: {
+                t: "刺身清酒",
+                d: "日料店，生冷饮食",
+                base: { yang: -8 },
+                path: { hanxie: 10, tanshi: 6 }
+            },
+            B: {
+                t: "清汤火锅",
+                d: "清汤锅底，多吃蔬菜",
+                base: { yang: 3 },
+                path: {}
+            }
+        }, {
+            id: "S07",
+            name: "运动",
+            bg: "exercise.png",
+            intro: "下午有一段自由时间，你如何安排身体活动？",
+            A: {
+                t: "沙发刷剧",
+                d: "久坐一下午，零食不断",
+                base: { qi: -6, yang: -4 },
+                path: { qizhi: 8, tanshi: 6, xueyu: 4 }
+            },
+            B: {
+                t: "慢跑八段锦",
+                d: "公园慢跑或练八段锦",
+                base: { qi: 8, yang: 4 },
+                path: { qizhi: -6, xueyu: -3 }
+            }
+        }, {
+            id: "S08",
+            name: "周期末不适",
+            bg: "period.png",
+            intro: "周期末小腹不适，身体开始发出信号。",
+            A: {
+                t: "止痛冰咖啡",
+                d: "止痛药加冰咖啡硬撑",
+                base: { xue: -10, yang: -8 },
+                path: { hanxie: 12, xueyu: 10 }
+            },
+            B: {
+                t: "暖腹休息",
+                d: "暖宝宝、姜茶，适当休息",
+                base: { xue: 6, yang: 5 },
+                path: { xueyu: -8, hanxie: -6 }
+            }
+        }, {
+            id: "S09",
+            name: "长期压力",
+            bg: "stress.png",
+            intro: "任务堆积、睡眠变浅，压力感越来越明显。",
+            A: {
+                t: "自我施压",
+                d: "不停制定计划，夜里失眠",
+                base: { qi: -12, yin: -5 },
+                path: { qizhi: 20 }
+            },
+            B: {
+                t: "正念咨询",
+                d: "冥想放松，接受心理支持",
+                base: { qi: 4, yin: 2 },
+                path: { qizhi: -15 }
+            }
+        }, {
+            id: "S10",
+            name: "过度健身",
+            bg: "overexercise.png",
+            intro: "你希望尽快看到训练成果，于是重新规划运动强度。",
+            A: {
+                t: "高强度力竭",
+                d: "大重量训练，每天练到耗尽",
+                base: { qi: -15, xue: -10 },
+                path: { xueyu: 15 }
+            },
+            B: {
+                t: "柔和训练",
+                d: "瑜伽、普拉提，动静适中",
+                base: { qi: 6, yang: 3 },
+                path: { qizhi: -4, xueyu: -5 }
+            }
+        }, {
+            id: "S11",
+            name: "流产术后回忆",
+            bg: "abortion_memory.png",
+            intro: "一段术后经历浮现，你会如何对待恢复期的身体？",
+            A: {
+                t: "过早上班",
+                d: "术后一周就返工，休养不足",
+                base: { xue: -20, qi: -15 },
+                path: { xueyu: 25, hanxie: 10 }
+            },
+            B: {
+                t: "遵医嘱休养",
+                d: "休养半月，注意营养",
+                base: { xue: -6 },
+                path: { xueyu: 8 }
+            }
+        }, {
+            id: "S12",
+            name: "滥用药物",
+            bg: "medicine.png",
+            intro: "面对身体困扰，你在考虑是否继续自行服药。",
+            A: {
+                t: "继续排毒药",
+                d: "长期服用苦寒通下药",
+                base: { yang: -15, qi: -8 },
+                path: { hanxie: 15, xueyu: 8 }
+            },
+            B: {
+                t: "停药调理",
+                d: "咨询医师，改为外治饮食",
+                base: { yang: 5 },
+                path: { xueyu: -6, hanxie: -8 }
+            }
+        }, {
+            id: "S13",
+            name: "湿热环境",
+            bg: "damp_heat.png",
+            intro: "居住空间潮湿闷热，身体感受也变得沉重。",
+            A: {
+                t: "久居潮湿",
+                d: "长期待在潮湿环境",
+                base: { yang: -6 },
+                path: { tanshi: 20, rejie: 6 }
+            },
+            B: {
+                t: "主动除湿",
+                d: "除湿通风，运动排汗",
+                base: { yang: 3 },
+                path: { tanshi: -12 }
+            }
+        }];
+
+        // ================================================================
+        //  状态管理
+        // ================================================================
+        function createInitialState() {
+            return {
+                // 气血阴阳（初始值靠近正常范围下限）
+                base: { qi: 78, xue: 80, yin: 78, yang: 80 },
+                // 病理罐子
+                path: { qizhi: 8, xueyu: 3, tanshi: 6, hanxie: 5, rejie: 5 },
+                // 五脏颜色: 0=金, 1=橙, 2=红
+                organs: { heart: 0, liver: 0, spleen: 0, kidney: 0, lung: 0 },
+                // 由选项直接造成的器官累积（普通+1，极坏+2）
+                manualOrgCount: { heart: 0, liver: 0, spleen: 0, kidney: 0, lung: 0 },
+                // 日程
+                schedule: [],
+                dayIndex: 0,
+                eventIndex: 0,
+                selected: false,
+                history: [],
+                probLines: [],
+                // 用于"持续"计数
+                consecutive: { qizhi: 0, tanshi: 0 }
+            };
+        }
+
+        // ================================================================
+        //  日程生成
+        // ================================================================
+        function createSchedule() {
+            const middleDays = shuffle(Array.from({ length: 26 }, (_, i) => i + 2)).slice(0, 8).sort((a, b) => a - b);
+            const days = [1, ...middleDays, 28];
+
+            const normalScenes = SCENES.filter(s => s.id !== "S08");
+            const periodScene = SCENES.find(s => s.id === "S08");
+            const randomScenes = shuffle(normalScenes);
+
+            const buckets = Array.from({ length: days.length - 1 }, () => []);
+            randomScenes.forEach((scene, idx) => {
+                buckets[idx % buckets.length].push(scene);
+            });
+
+            const result = [{ day: days[0], scenes: [periodScene] }];
+            days.slice(1).forEach((day, i) => {
+                result.push({ day, scenes: buckets[i] });
+            });
+            return result;
+        }
+
+        // ================================================================
+        //  渲染函数
+        // ================================================================
+        function currentEntry() { return state.schedule[state.dayIndex]; }
+
+        function currentScene() { return currentEntry().scenes[state.eventIndex]; }
+
+        function renderAll() {
+            renderTop();
+            renderJars();
+            renderOrganStates();
+            renderGame();
+        }
+
+        function renderTop() {
+            $("topStats").innerHTML = BASE_KEYS.map(item => `
+                <div class="statRow" data-stat="${item.k}">
+                    <div class="iconBox"><img src="${item.icon}" alt="${item.name}"></div>
+                    <div class="statName">${item.name}</div>
+                    <div class="barWrap"><div class="barFill" style="width:${state.base[item.k]}%"></div></div>
+                    <div class="statVal">${state.base[item.k]}</div>
+                    <div class="floatChange" id="fc_base_${item.k}"></div>
+                </div>
+            `).join("");
+        }
+
+        function renderJars() {
+            $("jars").innerHTML = PATH_KEYS.map(item => `
+                <div class="jarItem" data-path="${item.k}">
+                    <img class="jarImage" src="${item.img}" alt="${item.name}">
+                    <div class="jarInfo">
+                        <div class="jarName">${item.name}</div>
+                        <div class="jarBar"><div class="jarFill" style="width:${state.path[item.k]}%"></div></div>
+                        <div class="jarVal">${state.path[item.k]}</div>
+                    </div>
+                    <div class="jarFloat" id="fc_path_${item.k}"></div>
+                </div>
+            `).join("");
+        }
+
+        function refreshTopValues() {
+            BASE_KEYS.forEach(item => {
+                const row = document.querySelector(`.statRow[data-stat="${item.k}"]`);
+                if (!row) return;
+                row.querySelector(".barFill").style.width = state.base[item.k] + "%";
+                row.querySelector(".statVal").textContent = state.base[item.k];
+            });
+        }
+
+        function refreshJarValues() {
+            PATH_KEYS.forEach(item => {
+                const el = document.querySelector(`.jarItem[data-path="${item.k}"]`);
+                if (!el) return;
+                el.querySelector(".jarFill").style.width = state.path[item.k] + "%";
+                el.querySelector(".jarVal").textContent = state.path[item.k];
+            });
+        }
+
+        function renderGame() {
+            if (!state) return;
+            const scene = currentScene();
+            const entry = currentEntry();
+
+            $("gameBg").style.backgroundImage = `url('${scene.bg}')`;
+            $("dayLabel").textContent = `DAY ${entry.day}`;
+            $("sceneTitle").textContent = scene.name;
+            $("storyText").textContent = scene.intro;
+            $("probText").innerHTML = "";
+
+            state.selected = false;
+
+            $("options").innerHTML = ["A", "B"].map(letter => {
+                const opt = scene[letter];
+                return `
+                    <button class="optionBtn" data-choice="${letter}">
+                        <span class="optionTag">${letter}</span>
+                        <span class="optionTitle">${opt.t}</span>
+                        <span class="optionDesc">${opt.d}</span>
+                    </button>
+                `;
+            }).join("");
+
+            document.querySelectorAll(".optionBtn").forEach(btn => {
+                btn.onclick = () => choose(btn.dataset.choice);
+            });
+
+            $("continueWrap").style.display = "none";
+            $("continueBtn").textContent = getContinueText();
+        }
+
+        function getContinueText() {
+            const entry = currentEntry();
+            const isLastDay = state.dayIndex === state.schedule.length - 1;
+            const isLastSceneToday = state.eventIndex === entry.scenes.length - 1;
+            if (isLastDay && isLastSceneToday) return "查看月经表现卡";
+            if (!isLastSceneToday) return "继续";
+            return "进入下一日";
+        }
+
+        // ================================================================
+        //  数值应用 & 浮动动画
+        // ================================================================
+        function applyDelta(target, delta) {
+            Object.entries(delta || {}).forEach(([key, val]) => {
+                target[key] = clamp(target[key] + val);
+            });
+        }
+
+        function showBaseFloat(key, value) {
+            if (!value) return;
+            const el = $(`fc_base_${key}`);
+            const row = document.querySelector(`.statRow[data-stat="${key}"]`);
+            if (!el || !row) return;
+            el.textContent = value > 0 ? `+${value}` : `${value}`;
+            el.className = `floatChange ${value > 0 ? "up" : "down"} show`;
+            row.classList.add("changing");
+            setTimeout(() => { el.classList.remove("show");
+                row.classList.remove("changing"); }, 1500);
+        }
+
+        function showPathFloat(key, value) {
+            if (!value) return;
+            const el = $(`fc_path_${key}`);
+            const jar = document.querySelector(`.jarItem[data-path="${key}"]`);
+            if (!el || !jar) return;
+            el.textContent = value > 0 ? `+${value}` : `${value}`;
+            el.className = `jarFloat ${value > 0 ? "up" : "down"} show`;
+            jar.classList.add("changing");
+            setTimeout(() => { el.classList.remove("show");
+                jar.classList.remove("changing"); }, 1500);
+        }
+
+        function mergeDelta(a, b) {
+            const r = { ...(a || {}) };
+            Object.entries(b || {}).forEach(([k, v]) => { r[k] = (r[k] || 0) + v; });
+            return r;
+        }
+
+        function diffText(base, path) {
+            const out = [];
+            BASE_KEYS.forEach(item => {
+                const v = base[item.k] || 0;
+                if (v) out.push(`${item.name}${v > 0 ? "+" : ""}${v}`);
+            });
+            PATH_KEYS.forEach(item => {
+                const v = path[item.k] || 0;
+                if (v) out.push(`${item.name}${v > 0 ? "+" : ""}${v}`);
+            });
+            return out.length ? out.join("，") : "无明显数值变化";
+        }
+
+        // ================================================================
+        //  病机转化（文档第三节）
+        // ================================================================
+        function runPathogenicTransformations() {
+            const b = state.base;
+            const p = state.path;
+            const lines = [];
+            const addPath = {};
+
+            // 辅助：概率触发
+            function maybe(prob, key, val, label) {
+                if (Math.random() < prob) {
+                    addPath[key] = (addPath[key] || 0) + val;
+                    lines.push(`✅ ${label}（触发）`);
+                } else {
+                    lines.push(`⏳ ${label}（未触发）`);
+                }
+            }
+
+            // 1. 气滞化热
+            if (p.qizhi > 24) {
+                const val = Math.round(p.qizhi * 0.15);
+                maybe(0.4, "rejie", val, `气滞化热：气滞${p.qizhi} → 热邪+${val}`);
+            }
+
+            // 2. 气滞血瘀（持续2次）
+            if (p.qizhi > 29) {
+                state.consecutive.qizhi += 1;
+            } else {
+                state.consecutive.qizhi = 0;
+            }
+            if (state.consecutive.qizhi >= 2 && p.qizhi > 29) {
+                const val = Math.round(p.qizhi * 0.10);
+                maybe(0.6, "xueyu", val, `气滞血瘀（持续2次）：气滞${p.qizhi} → 血瘀+${val}`);
+                state.consecutive.qizhi = 0;
+            }
+
+            // 3. 气虚血瘀
+            if (b.qi < 70 && p.xueyu > 19) {
+                const val = Math.round((100 - b.qi) * 0.05);
+                maybe(0.7, "xueyu", val, `气虚血瘀：气${b.qi} → 血瘀+${val}`);
+            }
+
+            // 4. 脾虚生湿
+            if (b.qi < 70) {
+                const val = Math.round((100 - b.qi) * 0.08);
+                maybe(0.5, "tanshi", val, `脾虚生湿：气${b.qi} → 痰湿+${val}`);
+            }
+
+            // 5. 寒凝血瘀
+            if (p.hanxie > 19 && p.xueyu > 14) {
+                const val = Math.round(p.hanxie * 0.12);
+                maybe(0.8, "xueyu", val, `寒凝血瘀：寒邪${p.hanxie} → 血瘀+${val}`);
+            }
+
+            // 6. 热灼血瘀
+            if (p.rejie > 24 && p.xueyu > 19) {
+                const val = Math.round(p.rejie * 0.10);
+                maybe(0.6, "xueyu", val, `热灼血瘀：热邪${p.rejie} → 血瘀+${val}`);
+            }
+
+            // 7. 痰湿化热（持续3次）
+            if (p.tanshi > 29) {
+                state.consecutive.tanshi += 1;
+            } else {
+                state.consecutive.tanshi = 0;
+            }
+            if (state.consecutive.tanshi >= 3 && p.tanshi > 29) {
+                const val = Math.round(p.tanshi * 0.10);
+                maybe(0.5, "rejie", val, `痰湿化热（持续3次）：痰湿${p.tanshi} → 热邪+${val}`);
+                state.consecutive.tanshi = 0;
+            }
+
+            // 8. 痰湿伤阳
+            if (p.tanshi > 34) {
+                const val = Math.round(p.tanshi * 0.05);
+                maybe(0.4, null, null, `痰湿伤阳：痰湿${p.tanshi} → 阳-${val}`);
+                if (Math.random() < 0.4) {
+                    state.base.yang = clamp(state.base.yang - val);
+                    lines[lines.length - 1] = `✅ 痰湿伤阳：痰湿${p.tanshi} → 阳-${val}（触发）`;
+                }
+            }
+
+            // 9. 热邪伤阴
+            if (p.rejie > 29) {
+                const val = Math.round(p.rejie * 0.08);
+                maybe(0.7, null, null, `热邪伤阴：热邪${p.rejie} → 阴-${val}`);
+                if (Math.random() < 0.7) {
+                    state.base.yin = clamp(state.base.yin - val);
+                    lines[lines.length - 1] = `✅ 热邪伤阴：热邪${p.rejie} → 阴-${val}（触发）`;
+                }
+            }
+
+            // 10. 阴虚生热
+            if (b.yin < 70) {
+                const val = Math.round((100 - b.yin) * 0.06);
+                maybe(0.6, "rejie", val, `阴虚生热：阴${b.yin} → 热邪+${val}`);
+            }
+
+            // 11. 阳虚生寒
+            if (b.yang < 70) {
+                const val = Math.round((100 - b.yang) * 0.07);
+                maybe(0.5, "hanxie", val, `阳虚生寒：阳${b.yang} → 寒邪+${val}`);
+            }
+
+            return { lines, addPath };
+        }
+
+        // ================================================================
+        //  五脏自动等级（新阈值）
+        // ================================================================
+        function autoOrganLevels() {
+            const b = state.base;
+            const p = state.path;
+            const manual = state.manualOrgCount;
+
+            const target = { heart: 0, liver: 0, spleen: 0, kidney: 0, lung: 0 };
+
+            // 选项直接造成的器官影响
+            Object.keys(target).forEach(k => { target[k] = Math.max(target[k], manual[k] || 0); });
+
+            // 肝：气滞
+            if (p.qizhi > 24) target.liver = Math.max(target.liver, 1);
+            if (p.qizhi > 40) target.liver = Math.max(target.liver, 2);
+
+            // 脾：痰湿 或 气虚
+            if (p.tanshi > 24 || b.qi < 70) target.spleen = Math.max(target.spleen, 1);
+            if (p.tanshi > 40 || b.qi < 55) target.spleen = Math.max(target.spleen, 2);
+
+            // 肾：阴或阳虚
+            if (b.yin < 70 || b.yang < 70) target.kidney = Math.max(target.kidney, 1);
+            if (b.yin < 55 || b.yang < 55) target.kidney = Math.max(target.kidney, 2);
+
+            // 心：热邪 + 血虚
+            if (p.rejie > 24 && b.xue < 70) target.heart = Math.max(target.heart, 1);
+            if (p.rejie > 40 && b.xue < 55) target.heart = Math.max(target.heart, 2);
+
+            // 肺：寒邪 或 痰湿
+            if (p.hanxie > 24 || p.tanshi > 24) target.lung = Math.max(target.lung, 1);
+            if (p.hanxie > 40 || p.tanshi > 40) target.lung = Math.max(target.lung, 2);
+
+            return target;
+        }
+
+        function renderOrganStates() {
+            Object.entries(state.organs).forEach(([organ, level]) => {
+                const orange = $(`${organ}OrangeImg`);
+                const red = $(`${organ}RedImg`);
+                if (orange) orange.classList.toggle("is-visible", level === 1);
+                if (red) red.classList.toggle("is-visible", level === 2);
+            });
+        }
+
+        async function animateOrganChanges(targetLevels) {
+            const changes = [];
+            Object.keys(targetLevels).forEach(organ => {
+                const old = state.organs[organ];
+                const nw = targetLevels[organ];
+                if (nw > old) changes.push({ organ, level: nw });
+            });
+            if (!changes.length) return;
+
+            playSfx("sfxOrgan");
+            changes.forEach(({ organ, level }) => {
+                const hit = document.querySelector(`.organHit[data-organ="${organ}"]`);
+                if (!hit) return;
+                hit.classList.remove("flash", "orange", "red");
+                void hit.offsetWidth;
+                hit.classList.add("flash", level === 2 ? "red" : "orange");
+            });
+
+            await wait(1000);
+            changes.forEach(({ organ, level }) => {
+                state.organs[organ] = level;
+                const hit = document.querySelector(`.organHit[data-organ="${organ}"]`);
+                if (hit) hit.classList.remove("flash", "orange", "red");
+            });
+            renderOrganStates();
+        }
+
+        // ================================================================
+        //  选择逻辑
+        // ================================================================
+        async function choose(choice) {
+            if (state.selected) return;
+            state.selected = true;
+            playSfx("sfxClick");
+
+            document.querySelectorAll(".optionBtn").forEach(b => b.classList.add("disabled"));
+            $("continueWrap").style.display = "none";
+            $("probText").innerHTML = "";
+
+            const scene = currentScene();
+            const option = scene[choice];
+
+            // ---- 第一步：直接数值变化 ----
+            applyDelta(state.base, option.base);
+            refreshTopValues();
+            Object.entries(option.base || {}).forEach(([k, v]) => showBaseFloat(k, v));
+            playSfx("sfxChange");
+            await wait(1500);
+
+            // ---- 第二步：病机转化 ----
+            const transform = runPathogenicTransformations();
+            // 合并转化带来的病理变化
+            const pathDelta = mergeDelta(option.path, transform.addPath);
+            applyDelta(state.path, pathDelta);
+            refreshJarValues();
+            Object.entries(pathDelta).forEach(([k, v]) => showPathFloat(k, v));
+
+            // 显示转化信息
+            state.probLines = transform.lines;
+            $("probText").innerHTML = transform.lines.map(line => `<div>${line}</div>`).join("");
+
+            playSfx("sfxChange");
+            await wait(1500);
+
+            // ---- 第三步：五脏罗盘 ----
+            // 累积选项的器官影响
+            Object.entries(option.org || {}).forEach(([organ, severity]) => {
+                if (severity >= 2) state.manualOrgCount[organ] = 2;
+                else if (severity === 1) state.manualOrgCount[organ] = Math.min(2, state.manualOrgCount[organ] + 1);
+            });
+            const targetLevels = autoOrganLevels();
+            await animateOrganChanges(targetLevels);
+            renderOrganStates();
+
+            // ---- 记录历史 ----
+            state.history.push({
+                day: currentEntry().day,
+                scene: scene.name,
+                choice,
+                option: option.t,
+                desc: option.d,
+                change: diffText(option.base, pathDelta),
+                probability: [...transform.lines]
+            });
+
+            $("continueBtn").textContent = getContinueText();
+            $("continueWrap").style.display = "block";
+            saveGame();
+        }
+
+        // ================================================================
+        //  继续 & 报告
+        // ================================================================
+        function nextStep() {
+            playSfx("sfxClick");
+            const entry = currentEntry();
+            if (state.eventIndex < entry.scenes.length - 1) {
+                state.eventIndex++;
+                renderGame();
+                return;
+            }
+            if (state.dayIndex < state.schedule.length - 1) {
+                state.dayIndex++;
+                state.eventIndex = 0;
+                renderGame();
+                return;
+            }
+            showReport();
+            saveGame();
+        }
+
+        // ================================================================
+        //  报告生成（文档第二节）
+        // ================================================================
+        function calcReport() {
+            const b = state.base;
+            const p = state.path;
+            const o = state.organs;
+
+            // ----- 周期 -----
+            let cycle = "28天左右";
+            if (p.rejie > 24 && p.hanxie < 20) cycle = "偏提前";
+            else if (p.hanxie > 24 && p.xueyu > 19) cycle = "偏推后";
+            else if (p.qizhi > 29 && p.xueyu > 19) cycle = "推后或不畅";
+            else if (p.xueyu > 24 && b.qi < 71) cycle = "提前或延长";
+            else if (p.xueyu > 24 && b.yin < 71 && p.rejie > 19) cycle = "提前";
+            else if (p.xueyu > 24 && b.yang < 71 && p.hanxie > 19) cycle = "推后";
+            else if (p.tanshi > 29) cycle = "推后";
+            else if (b.qi < 71) cycle = "推后（气虚）";
+            else {
+                const parts = [];
+                if (p.rejie > 24) parts.push("偏提前");
+                if (p.hanxie > 24) parts.push("偏推后");
+                if (b.qi < 75) parts.push("易紊乱");
+                if (parts.length) cycle = parts.join("，");
+            }
+
+            // ----- 经量 -----
+            let amount = "中等";
+            if (p.rejie > 39 && p.xueyu < 25 && b.qi > 50) amount = "量多（血热）";
+            else if (p.rejie > 34 && p.xueyu > 29) amount = "量多或崩漏（热瘀）";
+            else if (b.qi < 60 && p.xueyu > 29) amount = "量少或淋漓（气虚血瘀）";
+            else if (p.xueyu > 39 && p.rejie < 25 && b.qi > 60) amount = "量少（血瘀阻滞）";
+            else if (p.hanxie > 34 && p.xueyu > 24) amount = "量少（寒凝血瘀）";
+            else if (b.xue < 40) amount = "量少（血虚）";
+            else if (b.qi < 50) amount = "量少（气虚）";
+            else if (p.rejie > 30) amount = "偏多";
+            else if (b.qi < 45) amount = "偏多或淋漓";
+            else if (p.xueyu > 30) amount = "偏少，夹血块";
+            else if (p.tanshi > 30) amount = "偏少";
+
+            // ----- 经色 -----
+            let color = "暗红";
+            if (p.rejie > 34 && p.xueyu < 25) color = "鲜红/深红（实热）";
+            else if (p.rejie > 29 && p.xueyu > 24) color = "紫红/暗红（热瘀）";
+            else if (p.xueyu > 34 && p.hanxie > 24) color = "暗红/紫暗（寒瘀）";
+            else if (p.xueyu > 34 && p.qizhi > 29) color = "紫暗有块（气滞血瘀）";
+            else if (p.xueyu > 34 && b.qi < 60) color = "淡暗（气虚血瘀）";
+            else if (p.hanxie > 29 && p.xueyu < 25) color = "淡红/暗红（血寒）";
+            else if (b.xue < 45 && p.rejie < 20) color = "淡红（血虚）";
+            else if (b.xue < 45) color = "淡红偏浅";
+            else if (b.yang < 45) color = "暗淡或紫暗";
+            else if (p.rejie > 30) color = "鲜红或深红";
+            else if (p.xueyu > 30) color = "暗红或紫黑，可有血块";
+            else if (p.tanshi > 30) color = "暗红、色泽不清爽";
+
+            // ----- 经质 -----
+            let texture = "质地尚可";
+            if (p.xueyu > 29) texture = "有血块（血瘀）";
+            else if (p.tanshi > 34) texture = "黏腻不畅（痰湿）";
+            else if (p.rejie > 34) texture = "质稠（血热）";
+            else if (p.hanxie > 34) texture = "质稀（血寒）";
+            else if (b.xue < 50) texture = "质稀（血虚）";
+            else if (b.qi < 55) texture = "质稀（气虚）";
+            else if (b.yang < 45) texture = "偏稀薄，夹有寒凝不畅感";
+            else if (p.qizhi > 30) texture = "排出不畅，有郁滞感";
+
+            // ----- 经期 -----
+            let period = "5-7天";
+            if (p.rejie > 34 && p.xueyu > 24) period = "延长（热瘀）";
+            else if (b.qi < 60 && p.xueyu > 24) period = "延长或淋漓（气虚血瘀）";
+            else if (p.rejie > 39 && b.qi > 60) period = "延长（血热）";
+            else if (p.xueyu > 39 && p.rejie < 25) period = "延长（血瘀）";
+            else if (p.qizhi > 39 && p.xueyu > 19) period = "延长或不畅（气滞血瘀）";
+            else if (b.xue < 45) period = "缩短（血虚）";
+            else if (p.hanxie > 34) period = "延长（血寒）";
+            else if (b.qi < 50 && p.xueyu < 25) period = "缩短（气虚）";
+            else if (b.qi < 40) period = "7-10天";
+            else if (p.tanshi > 30) period = "2-4天";
+
+            // ----- 伴随症状 -----
+            const sym = [];
+            function pushUnique(text) { if (text && !sym.includes(text)) sym.push(text); }
+            if (p.qizhi > 25 || o.liver > 0) pushUnique("经前乳房胀痛、情绪波动");
+            if (p.rejie > 25) pushUnique("心烦、口干或经行灼热感");
+            if (b.yang < 45 || o.kidney > 0) pushUnique("小腹冷痛、畏冷或腰膝酸软");
+            if (p.xueyu > 20) pushUnique("小腹刺痛或胀痛，经行不畅");
+            if (b.xue < 45) pushUnique("面色少华、乏力或头晕");
+            if (o.spleen > 0 || p.tanshi > 20) pushUnique("困重、纳呆、腹胀或白带黏腻");
+            if (p.rejie > 30 && p.tanshi > 20) pushUnique("经期腹痛伴灼热感，分泌物黏腻或有异味");
+            if (!sym.length) pushUnique("整体波动不明显，可继续观察作息、情绪与饮食习惯");
+
+            // ----- 病机总结 -----
+            const mech = [];
+            if (p.qizhi > 30 && p.rejie > 25 && o.liver > 0) mech.push("肝郁化火");
+            else if (p.qizhi > 30) mech.push("肝郁气滞");
+            if (p.hanxie > 20 && p.xueyu > 20) mech.push("寒凝血瘀");
+            else if (p.xueyu > 25) mech.push("血瘀阻滞");
+            if (p.tanshi > 25 && p.rejie > 25 && o.spleen > 0) mech.push("湿热下注");
+            else if (p.tanshi > 25) mech.push("痰湿内阻");
+            if (b.yang < 45 && p.hanxie < 20) mech.push("阳虚失温");
+            if (b.xue < 45) mech.push("血虚");
+            if (!mech.length) mech.push("气血阴阳暂处相对平衡");
+
+            const conclusion = mech.slice(0, 3).join("，");
+
+            return { cycle, period, amount, color, texture, symptoms: sym.join("；"), conclusion };
+        }
+
+        function showReport() {
+            playSfx("sfxReport");
+            const r = calcReport();
+            $("reportCard").innerHTML = `
+                <div class="reportConclusion">病机倾向：${r.conclusion}</div>
+                <div class="reportRow"><div class="reportKey">周期</div><div class="reportVal">${r.cycle}</div></div>
+                <div class="reportRow"><div class="reportKey">经期</div><div class="reportVal">${r.period}</div></div>
+                <div class="reportRow"><div class="reportKey">经量</div><div class="reportVal">${r.amount}</div></div>
+                <div class="reportRow"><div class="reportKey">经色</div><div class="reportVal">${r.color}</div></div>
+                <div class="reportRow"><div class="reportKey">经质</div><div class="reportVal">${r.texture}</div></div>
+                <div class="reportRow"><div class="reportKey">伴随<br>症状</div><div class="reportVal">${r.symptoms}</div></div>
+                <div class="reportNote">本结果用于中医妇科病机教学模拟与情境体验，不构成诊断或治疗建议。</div>
+            `;
+            show("reportScreen");
+        }
+
+        // ================================================================
+        //  回顾
+        // ================================================================
+        function showReview() {
+            playSfx("sfxClick");
+            const b = state.base,
+                p = state.path;
+            const final = `
+                <div class="finalState">
+                    <b style="color:var(--gold2)">最终状态</b><br>
+                    气 ${b.qi}　血 ${b.xue}　阴 ${b.yin}　阳 ${b.yang}<br>
+                    气滞 ${p.qizhi}　血瘀 ${p.xueyu}　痰湿 ${p.tanshi}　寒邪 ${p.hanxie}　热邪 ${p.rejie}<br>
+                    心 ${state.organs.heart}　肝 ${state.organs.liver}　脾 ${state.organs.spleen}　肾 ${state.organs.kidney}　肺 ${state.organs.lung}
+                </div>
+            `;
+            const items = state.history.map(item => `
+                <div class="reviewItem">
+                    <b style="color:var(--gold2)">DAY ${item.day}｜${item.scene}</b><br>
+                    选择：${item.choice}. ${item.option}<br>
+                    描述：${item.desc}<br>
+                    数值变化：${item.change}
+                    ${item.probability.length ? `<br>转化：${item.probability.join("；")}` : ""}
+                </div>
+            `).join("");
+            $("reviewPanel").innerHTML = `
+                <div class="reviewTitle">本局选择回顾</div>
+                ${final}${items}<div style="height:24px"></div>
+            `;
+            show("reviewScreen");
+        }
+
+        // ================================================================
+        //  重新开始
+        // ================================================================
+        function restart() {
+            playSfx("sfxClick");
+            newGame();
+            show("disclaimer");
+            saveGame();
+        }
+
+        function newGame() {
+// 初次初始化（首页）—— 尝试读取存档
+state = createInitialState();
+state.schedule = createSchedule();
+if (!loadGame()) {
+    // 没有存档就保存一次初始值
+    saveGame();
+}
+renderAll();
+saveGame();
+        }
+
+        // ================================================================
+        //  事件绑定
+        // ================================================================
+        $("musicBtn").onclick = toggleMusic;
+
+        $("startGame").onclick = () => {
+            playSfx("sfxClick");
+            startBgm();
+            newGame();
+            show("disclaimer");
+        };
+
+        $("enterGameBtn").onclick = () => {
+            playSfx("sfxClick");
+            startBgm();
+            renderAll();
+            show("gameScreen");
+        };
+
+        $("continueBtn").onclick = nextStep;
+        $("reviewBtn").onclick = showReview;
+        $("backReportBtn").onclick = () => { playSfx("sfxClick");
+            show("reportScreen"); };
+        $("restartBtn1").onclick = restart;
+
+        // 退出
+        $("exitBtn").onclick = () => $("exitModal").classList.add("active");
+        $("modalCancel").onclick = () => $("exitModal").classList.remove("active");
+        $("modalConfirm").onclick = () => {
+            $("exitModal").classList.remove("active");
+            playSfx("sfxClick");
+            newGame();
+            show("home");
+        };
+        $("exitModal").onclick = function(e) { if (e.target === this) this.classList.remove("active"); };
+
+        // 初次初始化（首页）
+// 初次初始化：尝试读取存档，若无则创建新游戏
+state = createInitialState();
+state.schedule = createSchedule();
+if (!loadGame()) {
+    // 没有存档，保存初始状态
+    saveGame();
+}
+renderAll();
+    </script>
+</body>
+</html>
